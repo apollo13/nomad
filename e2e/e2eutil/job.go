@@ -60,7 +60,7 @@ func JobInspectTemplate(jobID, template string) (string, error) {
 	cmd := exec.Command("nomad", "job", "inspect", "-t", template, jobID)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("could not register job: %w\n%v", err, string(out))
+		return "", fmt.Errorf("could not inspect job: %w\n%v", err, string(out))
 	}
 	outStr := string(out)
 	outStr = strings.TrimSuffix(outStr, "\n")
