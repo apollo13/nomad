@@ -259,27 +259,29 @@ func groupConnectHook(job *structs.Job, g *structs.TaskGroup) error {
 			// a name of an injected gateway task
 			service.Name = env.ReplaceEnv(service.Name)
 
+			// detect whether the group is in host networking mode, which will
+			// require tweaking the default gateway task config
 			netHost := g.Networks[0].Mode == "host"
 
-			if !netHost {
-				if service.Connect.IsGateway() {
-					// Modify the gateway proxy service configuration to automatically
-					// do the correct envoy bind address plumbing when inside a net
-					// namespace, but only if things are not explicitly configured.
-					service.Connect.Gateway.Proxy = gatewayProxyForBridge(service.Connect.Gateway)
-				}
+			if !netHost && service.Connect.IsGateway() {
+				// Modify the gateway proxy service configuration to automatically
+				// do the correct envoy bind address plumbing when inside a net
+				// namespace, but only if things are not explicitly configured.
+				service.Connect.Gateway.Proxy = gatewayProxyForBridge(service.Connect.Gateway)
+			}
 
-				if service.Connect.IsTerminating() {
-					if service.PortLabel == "" {
-						// Inject a dynamic port for the terminating gateway.
-						portLabel := fmt.Sprintf("%s-%s", structs.ConnectTerminatingPrefix, service.Name)
-						service.PortLabel = portLabel
-						injectPort(g, portLabel)
-						fmt.Println("SH: injected term port for:", service.Name)
-					}
-					// address needs to be 0.0.0.0; all we have is address_mode - what happens?
-					fmt.Println("SH term address mode:", service.AddressMode)
-				}
+			// Inject a port whether bridge or host network (if not already set).
+			// This port is accessed by the magic of Connect plumbing so it seems
+			// reasonable to keep the magic alive here.
+			if service.Connect.IsTerminating() && service.PortLabel == "" {
+				// Inject a dynamic port for the terminating gateway.
+				portLabel := fmt.Sprintf("%s-%s", structs.ConnectTerminatingPrefix, service.Name)
+				service.PortLabel = portLabel
+				injectPort(g, portLabel)
+				fmt.Println("SH: injected term port for:", service.Name)
+
+				// address needs to be 0.0.0.0; all we have is address_mode - what happens?
+				fmt.Println("SH term address mode:", service.AddressMode)
 			}
 
 			// inject the gateway task only if it does not yet already exist
