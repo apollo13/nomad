@@ -1,4 +1,4 @@
-job "test" {
+job "periodic" {
   datacenters = ["dc1"]
   type        = "batch"
 
@@ -12,8 +12,9 @@ job "test" {
       driver = "docker"
 
       config {
-        image   = "alpine:latest"
-        command = "ls"
+        image   = "busybox:1"
+        command = "/bin/sh"
+        args    = ["-c", "sleep 5"]
       }
     }
   }
