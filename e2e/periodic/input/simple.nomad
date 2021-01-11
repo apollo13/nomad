@@ -2,6 +2,12 @@ job "periodic" {
   datacenters = ["dc1"]
   type        = "batch"
 
+  constraint {
+    attribute = "${attr.kernel.name}"
+    value     = "linux"
+  }
+
+
   periodic {
     cron             = "* * * * *"
     prohibit_overlap = true
