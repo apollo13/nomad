@@ -72,13 +72,11 @@ func (tc *PeriodicTest) TestPeriodicDispatch_Basic(f *framework.F) {
 
 	// Assert there are no pending children
 	pending, err := e2eutil.JobInspectTemplate(jobID, `{{with index . 0}}{{printf "%d" .JobSummary.Children.Pending}}{{end}}`)
-
 	require.NoError(t, err)
 	require.Equal(t, "0", pending)
 
 	// Assert there are no pending children
 	dead, err := e2eutil.JobInspectTemplate(jobID, `{{with index . 0}}{{printf "%d" .JobSummary.Children.Dead}}{{end}}`)
-
 	require.NoError(t, err)
 	require.Equal(t, "1", dead)
 }
