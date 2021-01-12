@@ -453,6 +453,7 @@ func TestConnect_newConnectGateway(t *testing.T) {
 						},
 					},
 					EnvoyGatewayNoDefaultBind: true,
+					EnvoyDNSDiscoveryType:     "STRICT_DNS",
 					Config: map[string]interface{}{
 						"foo": 1,
 					},
@@ -470,6 +471,7 @@ func TestConnect_newConnectGateway(t *testing.T) {
 					},
 				},
 				"envoy_gateway_no_default_bind": true,
+				"envoy_dns_discovery_type":      "STRICT_DNS",
 				"foo":                           1,
 			},
 		}, result)

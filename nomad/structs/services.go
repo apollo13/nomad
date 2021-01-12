@@ -1477,7 +1477,7 @@ func (p *ConsulGatewayProxy) Validate() error {
 
 	switch p.EnvoyDNSDiscoveryType {
 	case "", strictDNS, logicalDNS:
-		// defaults to logical DNS, suitable for large scale workloads
+		// Consul defaults to logical DNS, suitable for large scale workloads.
 		// https://www.envoyproxy.io/docs/envoy/v1.16.1/intro/arch_overview/upstream/service_discovery
 	default:
 		return fmt.Errorf("Consul Gateway Proxy Envoy DNS Discovery type must be %s or %s", strictDNS, logicalDNS)
