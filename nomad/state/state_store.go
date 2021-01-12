@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	log "github.com/hashicorp/go-hclog"
 	memdb "github.com/hashicorp/go-memdb"
 	multierror "github.com/hashicorp/go-multierror"
@@ -1489,7 +1488,6 @@ func (s *StateStore) upsertJobImpl(index uint64, job *structs.Job, keepVersion b
 
 	// Setup the indexes correctly
 	if existing != nil {
-		spew.Dump("EXISTING!")
 		job.CreateIndex = existing.(*structs.Job).CreateIndex
 		job.ModifyIndex = index
 
@@ -3944,7 +3942,6 @@ func (s *StateStore) updateJobStabilityImpl(index uint64, namespace, jobID strin
 
 	copy := job.Copy()
 	copy.Stable = stable
-	spew.Dump("COPY STABLEEE", copy.Stable)
 	return s.upsertJobImpl(index, copy, true, txn)
 }
 
@@ -4447,7 +4444,6 @@ func (s *StateStore) setJobStatus(index uint64, txn *txn,
 
 	// Fast-path if nothing has changed.
 	if oldStatus == newStatus {
-		spew.Dump("DOING THIS THING")
 		if err := s.setJobSummary(txn, job, index, oldStatus, newStatus, firstPass); err != nil {
 			return err
 		}
@@ -4455,6 +4451,10 @@ func (s *StateStore) setJobStatus(index uint64, txn *txn,
 		// initialize / update job summary
 		return nil
 	}
+
+	// TODO (drew)
+	// not inserting the job again with modify index/status
+	// prevents job stability test pass
 
 	// Copy and update the existing job
 	updated := job.Copy()
