@@ -3080,7 +3080,46 @@ func TestConversion_ApiConsulConnectToStructs(t *testing.T) {
 		}))
 	})
 
-	t.Run("ingress", func(t *testing.T) {
+	t.Run("gateway proxy", func(t *testing.T) {
+		require.Equal(t, &structs.ConsulConnect{
+			Gateway: &structs.ConsulGateway{
+				Proxy: &structs.ConsulGatewayProxy{
+					ConnectTimeout:                  helper.TimeToPtr(3 * time.Second),
+					EnvoyGatewayBindTaggedAddresses: true,
+					EnvoyGatewayBindAddresses: map[string]*structs.ConsulGatewayBindAddress{
+						"service": {
+							Address: "10.0.0.1",
+							Port:    9000,
+						}},
+					EnvoyGatewayNoDefaultBind: true,
+					EnvoyDNSDiscoveryType:     "STRICT_DNS",
+					Config: map[string]interface{}{
+						"foo": "bar",
+					},
+				},
+			},
+		}, ApiConsulConnectToStructs(&api.ConsulConnect{
+			Gateway: &api.ConsulGateway{
+				Proxy: &api.ConsulGatewayProxy{
+					ConnectTimeout:                  helper.TimeToPtr(3 * time.Second),
+					EnvoyGatewayBindTaggedAddresses: true,
+					EnvoyGatewayBindAddresses: map[string]*api.ConsulGatewayBindAddress{
+						"service": {
+							Address: "10.0.0.1",
+							Port:    9000,
+						},
+					},
+					EnvoyGatewayNoDefaultBind: true,
+					EnvoyDNSDiscoveryType:     "STRICT_DNS",
+					Config: map[string]interface{}{
+						"foo": "bar",
+					},
+				},
+			},
+		}))
+	})
+
+	t.Run("gateway ingress", func(t *testing.T) {
 		require.Equal(t, &structs.ConsulConnect{
 			Gateway: &structs.ConsulGateway{
 				Ingress: &structs.ConsulIngressConfigEntry{
@@ -3114,7 +3153,7 @@ func TestConversion_ApiConsulConnectToStructs(t *testing.T) {
 		))
 	})
 
-	t.Run("terminating", func(t *testing.T) {
+	t.Run("gateway terminating", func(t *testing.T) {
 		require.Equal(t, &structs.ConsulConnect{
 			Gateway: &structs.ConsulGateway{
 				Terminating: &structs.ConsulTerminatingConfigEntry{
