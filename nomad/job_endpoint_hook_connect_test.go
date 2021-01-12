@@ -521,7 +521,7 @@ func TestJobEndpointConnect_gatewayProxyForBridge(t *testing.T) {
 		}, result)
 	})
 
-	t.Run("fill in defaults", func(t *testing.T) {
+	t.Run("ingress set defaults", func(t *testing.T) {
 		result := gatewayProxyForBridge(&structs.ConsulGateway{
 			Proxy: &structs.ConsulGatewayProxy{
 				ConnectTimeout: helper.TimeToPtr(2 * time.Second),
@@ -550,7 +550,7 @@ func TestJobEndpointConnect_gatewayProxyForBridge(t *testing.T) {
 		}, result)
 	})
 
-	t.Run("leave as-is", func(t *testing.T) {
+	t.Run("ingress leave as-is", func(t *testing.T) {
 		result := gatewayProxyForBridge(&structs.ConsulGateway{
 			Proxy: &structs.ConsulGatewayProxy{
 				Config:                          map[string]interface{}{"foo": 1},
@@ -572,5 +572,39 @@ func TestJobEndpointConnect_gatewayProxyForBridge(t *testing.T) {
 			EnvoyGatewayBindTaggedAddresses: true,
 			EnvoyGatewayBindAddresses:       nil,
 		}, result)
+	})
+
+	t.Run("terminating set defaults", func(t *testing.T) {
+		result := gatewayProxyForBridge(&structs.ConsulGateway{
+			Proxy: &structs.ConsulGatewayProxy{
+				ConnectTimeout:        helper.TimeToPtr(2 * time.Second),
+				EnvoyDNSDiscoveryType: "STRICT_DNS",
+			},
+			Terminating: &structs.ConsulTerminatingConfigEntry{
+				Services: []*structs.ConsulLinkedService{{
+					Name:     "service1",
+					CAFile:   "/cafile.pem",
+					CertFile: "/certfile.pem",
+					KeyFile:  "/keyfile.pem",
+					SNI:      "",
+				}},
+			},
+		})
+		require.Equal(t, &structs.ConsulGatewayProxy{
+			ConnectTimeout:                  helper.TimeToPtr(2 * time.Second),
+			EnvoyGatewayNoDefaultBind:       true,
+			EnvoyGatewayBindTaggedAddresses: false,
+			EnvoyDNSDiscoveryType:           "STRICT_DNS",
+			EnvoyGatewayBindAddresses: map[string]*structs.ConsulGatewayBindAddress{
+				"default": {
+					Address: "0.0.0.0",
+					Port:    -1,
+				},
+			},
+		}, result)
+	})
+
+	t.Run("terminating leave as-is", func(t *testing.T) {
+		//
 	})
 }

@@ -291,7 +291,10 @@ func TestService_ConsulGateway_Canonicalize(t *testing.T) {
 		}
 		cg.Canonicalize()
 		require.Equal(t, timeToPtr(5*time.Second), cg.Proxy.ConnectTimeout)
+		require.True(t, cg.Proxy.EnvoyGatewayBindTaggedAddresses)
 		require.Nil(t, cg.Proxy.EnvoyGatewayBindAddresses)
+		require.True(t, cg.Proxy.EnvoyGatewayNoDefaultBind)
+		require.Empty(t, cg.Proxy.EnvoyDNSDiscoveryType)
 		require.Nil(t, cg.Proxy.Config)
 		require.Nil(t, cg.Ingress.Listeners)
 	})
@@ -314,6 +317,7 @@ func TestService_ConsulGateway_Copy(t *testing.T) {
 				"listener2": {Address: "10.0.0.1", Port: 2001},
 			},
 			EnvoyGatewayNoDefaultBind: true,
+			EnvoyDNSDiscoveryType:     "STRICT_DNS",
 			Config: map[string]interface{}{
 				"foo": "bar",
 				"baz": 3,

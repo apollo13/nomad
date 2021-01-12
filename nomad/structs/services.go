@@ -1383,6 +1383,7 @@ type ConsulGatewayProxy struct {
 	EnvoyGatewayBindTaggedAddresses bool
 	EnvoyGatewayBindAddresses       map[string]*ConsulGatewayBindAddress
 	EnvoyGatewayNoDefaultBind       bool
+	EnvoyDNSDiscoveryType           string
 	Config                          map[string]interface{}
 }
 
@@ -1391,18 +1392,27 @@ func (p *ConsulGatewayProxy) Copy() *ConsulGatewayProxy {
 		return nil
 	}
 
+	return &ConsulGatewayProxy{
+		ConnectTimeout:                  helper.TimeToPtr(*p.ConnectTimeout),
+		EnvoyGatewayBindTaggedAddresses: p.EnvoyGatewayBindTaggedAddresses,
+		EnvoyGatewayBindAddresses:       p.copyBindAddresses(),
+		EnvoyGatewayNoDefaultBind:       p.EnvoyGatewayNoDefaultBind,
+		EnvoyDNSDiscoveryType:           p.EnvoyDNSDiscoveryType,
+		Config:                          helper.CopyMapStringInterface(p.Config),
+	}
+}
+
+func (p *ConsulGatewayProxy) copyBindAddresses() map[string]*ConsulGatewayBindAddress {
+	if len(p.EnvoyGatewayBindAddresses) == 0 {
+		return nil
+	}
+
 	bindAddresses := make(map[string]*ConsulGatewayBindAddress, len(p.EnvoyGatewayBindAddresses))
 	for k, v := range p.EnvoyGatewayBindAddresses {
 		bindAddresses[k] = v.Copy()
 	}
 
-	return &ConsulGatewayProxy{
-		ConnectTimeout:                  helper.TimeToPtr(*p.ConnectTimeout),
-		EnvoyGatewayBindTaggedAddresses: p.EnvoyGatewayBindTaggedAddresses,
-		EnvoyGatewayBindAddresses:       bindAddresses,
-		EnvoyGatewayNoDefaultBind:       p.EnvoyGatewayNoDefaultBind,
-		Config:                          helper.CopyMapStringInterface(p.Config),
-	}
+	return bindAddresses
 }
 
 func (p *ConsulGatewayProxy) equalBindAddresses(o map[string]*ConsulGatewayBindAddress) bool {
@@ -1440,12 +1450,21 @@ func (p *ConsulGatewayProxy) Equals(o *ConsulGatewayProxy) bool {
 		return false
 	}
 
+	if p.EnvoyDNSDiscoveryType != o.EnvoyDNSDiscoveryType {
+		return false
+	}
+
 	if !opaqueMapsEqual(p.Config, o.Config) {
 		return false
 	}
 
 	return true
 }
+
+const (
+	strictDNS  = "STRICT_DNS"
+	logicalDNS = "LOGICAL_DNS"
+)
 
 func (p *ConsulGatewayProxy) Validate() error {
 	if p == nil {
@@ -1454,6 +1473,14 @@ func (p *ConsulGatewayProxy) Validate() error {
 
 	if p.ConnectTimeout == nil {
 		return fmt.Errorf("Consul Gateway Proxy connection_timeout must be set")
+	}
+
+	switch p.EnvoyDNSDiscoveryType {
+	case "", strictDNS, logicalDNS:
+		// defaults to logical DNS, suitable for large scale workloads
+		// https://www.envoyproxy.io/docs/envoy/v1.16.1/intro/arch_overview/upstream/service_discovery
+	default:
+		return fmt.Errorf("Consul Gateway Proxy Envoy DNS Discovery type must be %s or %s", strictDNS, logicalDNS)
 	}
 
 	for _, bindAddr := range p.EnvoyGatewayBindAddresses {

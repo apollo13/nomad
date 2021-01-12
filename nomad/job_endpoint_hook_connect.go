@@ -344,6 +344,7 @@ func gatewayProxyForBridge(gateway *structs.ConsulGateway) *structs.ConsulGatewa
 	proxy := new(structs.ConsulGatewayProxy)
 	if gateway.Proxy != nil {
 		proxy.ConnectTimeout = gateway.Proxy.ConnectTimeout
+		proxy.EnvoyDNSDiscoveryType = gateway.Proxy.EnvoyDNSDiscoveryType
 		proxy.Config = gateway.Proxy.Config
 	}
 
@@ -354,8 +355,7 @@ func gatewayProxyForBridge(gateway *structs.ConsulGateway) *structs.ConsulGatewa
 		proxy.EnvoyGatewayBindTaggedAddresses = false
 		proxy.EnvoyGatewayBindAddresses = gatewayBindAddressesIngress(gateway.Ingress)
 	case gateway.Terminating != nil:
-		// thinking this is handled by the service definition - it's a lot like a sidecar
-		proxy.EnvoyGatewayNoDefaultBind = false
+		proxy.EnvoyGatewayNoDefaultBind = true
 		proxy.EnvoyGatewayBindTaggedAddresses = false
 		proxy.EnvoyGatewayBindAddresses = map[string]*structs.ConsulGatewayBindAddress{
 			"default": {

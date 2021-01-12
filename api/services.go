@@ -337,6 +337,8 @@ type ConsulGatewayBindAddress struct {
 }
 
 var (
+	// defaultGatewayConnectTimeout is the default amount of time connections to
+	// upstreams are allowed before timing out.
 	defaultGatewayConnectTimeout = 5 * time.Second
 )
 
@@ -349,6 +351,7 @@ type ConsulGatewayProxy struct {
 	EnvoyGatewayBindTaggedAddresses bool                                 `mapstructure:"envoy_gateway_bind_tagged_addresses" hcl:"envoy_gateway_bind_tagged_addresses,optional"`
 	EnvoyGatewayBindAddresses       map[string]*ConsulGatewayBindAddress `mapstructure:"envoy_gateway_bind_addresses" hcl:"envoy_gateway_bind_addresses,block"`
 	EnvoyGatewayNoDefaultBind       bool                                 `mapstructure:"envoy_gateway_no_default_bind" hcl:"envoy_gateway_no_default_bind,optional"`
+	EnvoyDNSDiscoveryType           string                               `mapstructure:"envoy_dns_discovery_type" hcl:"envoy_dns_discovery_type"`
 	Config                          map[string]interface{}               `hcl:"config,block"` // escape hatch envoy config
 }
 
@@ -397,6 +400,7 @@ func (p *ConsulGatewayProxy) Copy() *ConsulGatewayProxy {
 		EnvoyGatewayBindTaggedAddresses: p.EnvoyGatewayBindTaggedAddresses,
 		EnvoyGatewayBindAddresses:       binds,
 		EnvoyGatewayNoDefaultBind:       p.EnvoyGatewayNoDefaultBind,
+		EnvoyDNSDiscoveryType:           p.EnvoyDNSDiscoveryType,
 		Config:                          config,
 	}
 }

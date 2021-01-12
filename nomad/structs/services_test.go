@@ -594,7 +594,9 @@ var (
 
 	consulTerminatingGateway1 = &ConsulGateway{
 		Proxy: &ConsulGatewayProxy{
-			ConnectTimeout: helper.TimeToPtr(1 * time.Second),
+			ConnectTimeout:            helper.TimeToPtr(1 * time.Second),
+			EnvoyDNSDiscoveryType:     "STRICT_DNS",
+			EnvoyGatewayBindAddresses: nil,
 		},
 		Terminating: &ConsulTerminatingConfigEntry{
 			Services: []*ConsulLinkedService{{
@@ -761,6 +763,12 @@ func TestConsulGateway_Equals_terminating(t *testing.T) {
 		require.False(t, modifiable.Equals(original))
 		require.True(t, modifiable.Equals(modifiable))
 	}
+
+	// proxy stanza equality checks
+
+	t.Run("mod dns discovery type", func(t *testing.T) {
+		try(t, func(g *cg) { g.Proxy.EnvoyDNSDiscoveryType = "LOGICAL_DNS" })
+	})
 
 	// terminating config entry equality checks
 
@@ -955,6 +963,14 @@ func TestConsulGatewayProxy_Validate(t *testing.T) {
 				}},
 		}).Validate()
 		require.EqualError(t, err, "Consul Gateway Bind Address must set valid Port")
+	})
+
+	t.Run("invalid dns discovery type", func(t *testing.T) {
+		err := (&ConsulGatewayProxy{
+			ConnectTimeout:        helper.TimeToPtr(1 * time.Second),
+			EnvoyDNSDiscoveryType: "RANDOM_DNS",
+		}).Validate()
+		require.EqualError(t, err, "Consul Gateway Proxy Envoy DNS Discovery type must be STRICT_DNS or LOGICAL_DNS")
 	})
 
 	t.Run("ok with nothing set", func(t *testing.T) {
