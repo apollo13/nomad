@@ -133,6 +133,12 @@ func (c *cniNetworkConfigurator) Setup(ctx context.Context, alloc *structs.Alloc
 
 	addCustomCNIArgs(tg.Networks, cniArgs)
 
+	// Add NOMAD_* after custom args so it cannot be overridden.
+	cniArgs["NOMAD_NAMESPACE"] = alloc.Namespace
+	cniArgs["NOMAD_JOB_NAME"] = alloc.Job.Name
+	cniArgs["NOMAD_GROUP_NAME"] = alloc.TaskGroup
+	cniArgs["NOMAD_ALLOC_ID"] = alloc.ID
+
 	portMaps := getPortMapping(alloc, c.ignorePortMappingHostIP)
 
 	tproxyArgs, err := c.setupTransparentProxyArgs(alloc, spec, portMaps)
